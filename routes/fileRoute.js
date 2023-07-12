@@ -4,18 +4,29 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Set storage for uploaded files
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // specify the destination folder
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
+  destination: 'uploads/', // Destination folder where files will be uploaded
+  filename: (req, file, cb) => {
+    cb(null, file.originalname); // Use the original file name
   }
 });
 
-// Create multer upload instance
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 25 * 1024 * 1024, // Limit file size to 25MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedFileTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+
+    if (allowedFileTypes.includes(file.mimetype)) {
+      cb(null, true); // Accept the file
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, JPG, PNG, PDF, MS Word, and Excel files are allowed.'), false); // Reject the file
+    }
+  },
+});
+
 
 // Handle file upload route
 router.post('/upload', upload.array('files'), (req, res) => {
